@@ -8,21 +8,25 @@ make_server(Port) :-
     format('Started a server on port: ~d~n', [Port]),
     server_loop(Socket).
 
+% ip(127,0,0,1)             Peer
+% <socket>(0x561db40068e0)  Client
+
 server_loop(Socket) :-
-    tcp_accept(Socket, Client, Peer),
-    format('Connected with ~w~n', [Peer]),
+    tcp_accept(Socket, Client, _Peer),
+    format('Connected with ~w~n', [Client]),
     setup_call_cleanup(
-        tcp_open_socket(Client, InStream, OutStream),
-        handle_client(InStream, OutStream),
-        (close(InStream), close(OutStream))
+        tcp_open_socket(Client, StreamPair),
+        handle_client(StreamPair),
+        close(StreamPair)
     ),
     server_loop(Socket).
 
-handle_client(InStream, OutStream) :-
+handle_client(StreamPair) :-
+    stream_pair(StreamPair, InStream, OutStream),
     read_line_to_string(InStream, Request),
     format('Got: ~w~n', [Request]),
     format(OutStream, 'HTTP/1.0 200 OK~n', []),
     format(OutStream, 'Content-Type: text/plain~n', []),
     format(OutStream, 'Content-Length: 2~n~n', []),
-    format(OutStream, 'OK~n', []),
+    format(OutStream, 'OK', []),
     flush_output(OutStream).
