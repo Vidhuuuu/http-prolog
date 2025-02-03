@@ -1,5 +1,8 @@
 :- module(server, [make_server/1]).
 :- use_module(library(socket)).
+:- use_module(server/parse_req, [parse_request/2]).
+
+% :- use_module(server/server, [make_server/1]).
 
 make_server(Port) :-
     tcp_socket(Socket),
@@ -25,8 +28,6 @@ handle_client(StreamPair) :-
     stream_pair(StreamPair, InStream, OutStream),
     read_line_to_string(InStream, Request),
     format('Got: ~w~n', [Request]),
-    format(OutStream, 'HTTP/1.0 200 OK~n', []),
-    format(OutStream, 'Content-Type: text/plain~n', []),
-    format(OutStream, 'Content-Length: 2~n~n', []),
-    format(OutStream, 'OK', []),
+    parse_request(Request, Response),
+    format(OutStream, '~s', [Response]),
     flush_output(OutStream).
