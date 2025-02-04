@@ -17,7 +17,7 @@ handle_method("GET", Path, Version, Response) :-
     serve_get_req(Path, Version, Response).
 handle_method(_, _, _, Response) :-
     Response = "HTTP/1.0 405 Method Not Allowed\r\n\r\n",
-    !
+    !.
 
 serve_get_req("/", Version, Response) :-
     serve_get_req("/index.html", Version, Response).
