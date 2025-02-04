@@ -19,6 +19,8 @@ parse_request(Request, Response) :-
 
 handle_method("GET", Path, Version, Response) :-
     serve_get_req(Path, Version, Response).
+handle_method("HEAD", Path, Version, Response) :-
+    serve_head_req(Path, Version, Response).
 handle_method(_, _, _, Response) :-
     Response = "HTTP/1.0 405 Method Not Allowed\r\n\r\n",
     !.
@@ -26,12 +28,12 @@ handle_method(_, _, _, Response) :-
 serve_get_req("/", Version, Response) :-
     serve_get_req("/index.html", Version, Response).
 serve_get_req(Path, Version, Response) :-
-    file_name_extension(_, Ext, Path),
-    atom_concat('.', Ext, PeriodExt),
-    media_type(PeriodExt, MediaType),
-
     atom_concat('static', Path, FilePath),
     (exists_file(FilePath) ->
+        file_name_extension(_, Ext, Path),
+        atom_concat('.', Ext, PeriodExt),
+        media_type(PeriodExt, MediaType),
+
         size_file(FilePath, FileSize),
         read_file_to_string(FilePath, FileContent, []),
         format(string(Response),
@@ -40,4 +42,21 @@ serve_get_req(Path, Version, Response) :-
     ;
         Response = "HTTP/1.0 404 File Not Found\r\n\r\n",
         !
+    ).
+
+serve_head_req("/", Version, Response) :-
+    serve_head_req("/index.html", Version, Response).
+serve_head_req(Path, Version, Response) :-
+    atom_concat('static', Path, FilePath),
+    (exists_file(FilePath) ->
+        file_name_extension(_, Ext, Path),
+        atom_concat('.', Ext, PeriodExt),
+        media_type(PeriodExt, MediaType),
+
+        size_file(FilePath, FileSize),
+        format(string(Response),
+        "~s 200 OK\r\nContent-Type: ~w\r\nContent-Length:~d\r\n\r\n",
+            [Version, MediaType, FileSize])
+    ;
+        Response = "HTTP/1.0 404 File Not Found\r\n\r\n"
     ).
