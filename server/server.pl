@@ -2,8 +2,6 @@
 :- use_module(library(socket)).
 :- use_module(server/parse_req, [parse_request/2]).
 
-% :- use_module(server/server, [make_server/1]).
-
 make_server(Port) :-
     tcp_socket(Socket),
     tcp_bind(Socket, Port),
